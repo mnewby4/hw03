@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'helper.dart';
+import 'dart:math';
 DatabaseHelper myHelper = DatabaseHelper();
 /*
   Objective: card-matching game w animation+state management, player shld match cards from
@@ -7,8 +8,8 @@ DatabaseHelper myHelper = DatabaseHelper();
   UI: gridview or smth else 
     - grid of face-down cards (4x4 or 6x6)
     - back design [common pattern]
-  state management: eg Provider to manage it
-    data model for cards with 
+  Xstate management: eg Provider to manage it
+    Xdata model for cards with 
       front+back design properties
       current state [face up or down]
   animation:   animatedbuilder or animatedcontainer
@@ -24,7 +25,6 @@ Future<void> main() async {
   await myHelper.init();
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -51,36 +51,56 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-/*class Card {
-  final String cardName; 
-  final bool isCardUp;
+class Card {
+  final int cardID; 
+  final int isCardUp;
   final String backDesign;
   final String frontDesign;
 
   Card({
-    required this.cardName, 
+    required this.cardID, 
     required this.isCardUp, 
     required this.backDesign, 
     required this.frontDesign
   });
-}*/
+
+  Map<String, Object?> toMap() {
+    return {'_id': cardID, 'isCardUp': isCardUp, 'backDesign': backDesign, 'frontDesign': frontDesign};
+  }
+  @override
+  String toString() {
+    return 'Card{_id: $cardID, isCardUp: $isCardUp, backDesign: $backDesign, frontDesign: $frontDesign}';
+  }
+}
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Card> cards = [];
+  List<int> sessionCards = [];
+  List<int> takenNums = [];
   int cardsMax = 16;
 
   @override
   void initState() {
     super.initState();
+    _generateCards();
   }
 
   void _generateCards() async {
     setState(() {
       //generate 8 different numbers, create them 2x -> 16 total
-      for (int i = 0; cards.length <= cardsMax; i++) {
+      Random random = new Random();
+      for (int i = 0; sessionCards.length < cardsMax; i++) {
         //make each property so they can be created 2x
-        //pick random from 1-8 [num 1-10 and JQK -> 13 total] and ALSO make sure that num ISNT alrdy taken
+        //pick random from 1-8 [ids 1-13] and ALSO make sure that num ISNT alrdy taken
+        int randomNum = random.nextInt(13) + 1;
+        if (!takenNums.contains(randomNum)) {
+          takenNums.add(randomNum);
+          sessionCards.add(randomNum);
+          sessionCards.add(randomNum);
+          print('$randomNum added to takenNums: $takenNums');
+          print('CURRENT SESSION CARDS; $sessionCards');
+        }
       }
+      sessionCards.shuffle();
     });
   }
 
@@ -92,9 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
   void _incrementCounter() async {
     //setState(() {
-      print('my db');
+      /*print('my db');
       print(await _display());
-      print(await _countReturn());
+      print(await _countReturn());*/
     //});
   }
 
@@ -118,10 +138,10 @@ class _MyHomePageState extends State<MyHomePage> {
               child: GridView.count(
                 crossAxisCount: 4,
                 padding: const EdgeInsets.all(10),
-                children: List.generate(16, (index) {
+                children: List.generate(cardsMax, (index) {
                   return Center(
                     child: Text(
-                      'Card $index',
+                      'Card ${sessionCards[index]}',
                       style: TextTheme.of(context).headlineSmall,
                     ),
                   );
@@ -132,7 +152,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: _generateCards,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
