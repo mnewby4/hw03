@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'helper.dart';
+DatabaseHelper myHelper = DatabaseHelper();
 /*
   Objective: card-matching game w animation+state management, player shld match cards from
     a grid of face-down cards -> flip to find pairs
@@ -18,9 +19,12 @@ import 'helper.dart';
       NOT MATCH -> flip face-down again
   win condition: check if all pairs r matched -> display victory msg
 */
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await myHelper.init();
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -33,7 +37,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Card Game'),
     );
   }
 }
@@ -47,13 +51,51 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+/*class Card {
+  final String cardName; 
+  final bool isCardUp;
+  final String backDesign;
+  final String frontDesign;
 
-  void _incrementCounter() {
+  Card({
+    required this.cardName, 
+    required this.isCardUp, 
+    required this.backDesign, 
+    required this.frontDesign
+  });
+}*/
+
+class _MyHomePageState extends State<MyHomePage> {
+  List<Card> cards = [];
+  int cardsMax = 16;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _generateCards() async {
     setState(() {
-      _counter++;
+      //generate 8 different numbers, create them 2x -> 16 total
+      for (int i = 0; cards.length <= cardsMax; i++) {
+        //make each property so they can be created 2x
+        //pick random from 1-8 [num 1-10 and JQK -> 13 total] and ALSO make sure that num ISNT alrdy taken
+      }
     });
+  }
+
+  Future<List<Map<String, dynamic>>> _display() async {
+    return await myHelper.queryAllRows();
+  }
+  Future<int> _countReturn() async {
+    return await myHelper.queryRowCount();
+  }
+  void _incrementCounter() async {
+    //setState(() {
+      print('my db');
+      print(await _display());
+      print(await _countReturn());
+    //});
   }
 
   @override
@@ -70,9 +112,21 @@ class _MyHomePageState extends State<MyHomePage> {
             const Text(
               'You have pushed the button this many times:',
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            SizedBox(
+              width: 300, 
+              height: 700, 
+              child: GridView.count(
+                crossAxisCount: 4,
+                padding: const EdgeInsets.all(10),
+                children: List.generate(16, (index) {
+                  return Center(
+                    child: Text(
+                      'Card $index',
+                      style: TextTheme.of(context).headlineSmall,
+                    ),
+                  );
+                }),
+              ),
             ),
           ],
         ),
