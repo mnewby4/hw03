@@ -1,3 +1,4 @@
+import 'package:hw03/main.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
@@ -33,18 +34,6 @@ class DatabaseHelper {
   $columnFrontDesign TEXT NOT NULL
   )
 ''');
-  /*await db.insert(table, {
-      columnId: 1,
-      columnCardUp: 0, 
-      columnBackDesign: 'https://i.pinimg.com/236x/90/04/5e/90045ee90ffda21b689af6a2847e6b0d.jpg',
-      columnFrontDesign: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/English_pattern_ace_of_clubs.svg/800px-English_pattern_ace_of_clubs.svg.png',
-    });
-    await db.insert(table, {
-      columnId: 2,
-      columnCardUp: 0, 
-      columnBackDesign: 'https://i.pinimg.com/236x/90/04/5e/90045ee90ffda21b689af6a2847e6b0d.jpg',
-      columnFrontDesign: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/English_pattern_2_of_clubs.svg/800px-English_pattern_2_of_clubs.svg.png',
-    });*/
     List<String> frontDesigns = [
       'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/English_pattern_ace_of_clubs.svg/800px-English_pattern_ace_of_clubs.svg.png',
       'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/English_pattern_2_of_clubs.svg/800px-English_pattern_2_of_clubs.svg.png',
@@ -86,6 +75,24 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> queryAllRows() async {
     await init();
     return await _db.query(table);
+  }
+
+  Future<Card?> queryOneRow(int id) async {
+    //final result = await _db.rawQuery('SELECT * FROM $table WHERE _id = $id');
+    List<Map<String, dynamic>> result = await _db.query(
+      table, 
+      where: '$columnId = ?',
+      whereArgs: [id],
+    );
+
+    if (result.isNotEmpty) {
+      return Card(
+        cardID: result.first[columnId] as int,
+        isCardUp: result.first[columnCardUp] as int,
+        backDesign: result.first[columnBackDesign] as String,
+        frontDesign: result.first[columnFrontDesign] as String,
+      );
+    } return null;    
   }
 
 // All of the methods (insert, query, update, delete) can also be done using

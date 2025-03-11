@@ -71,10 +71,11 @@ class Card {
   String toString() {
     return 'Card{_id: $cardID, isCardUp: $isCardUp, backDesign: $backDesign, frontDesign: $frontDesign}';
   }
+  
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<int> sessionCards = [];
+  List<Card> sessionCards = [];
   List<int> takenNums = [];
   int cardsMax = 16;
 
@@ -85,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _generateCards() async {
-    setState(() {
+    //setState(() {
       //generate 8 different numbers, create them 2x -> 16 total
       Random random = new Random();
       for (int i = 0; sessionCards.length < cardsMax; i++) {
@@ -94,14 +95,16 @@ class _MyHomePageState extends State<MyHomePage> {
         int randomNum = random.nextInt(13) + 1;
         if (!takenNums.contains(randomNum)) {
           takenNums.add(randomNum);
-          sessionCards.add(randomNum);
-          sessionCards.add(randomNum);
-          print('$randomNum added to takenNums: $takenNums');
-          print('CURRENT SESSION CARDS; $sessionCards');
+          //List<Map<String, dynamic>> fetchCard = await myHelper.queryOneRow(randomNum);
+          //Card currentCard = 
+          Card? currentCard = await myHelper.queryOneRow(randomNum);
+          sessionCards.add(currentCard!);
+          sessionCards.add(currentCard!);
+          //print('CURRENT SESSION CARDS; $sessionCards');
         }
       }
-      sessionCards.shuffle();
-    });
+        sessionCards.shuffle();
+        setState(() {});
   }
 
   Future<List<Map<String, dynamic>>> _display() async {
@@ -110,52 +113,48 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<int> _countReturn() async {
     return await myHelper.queryRowCount();
   }
-  void _incrementCounter() async {
-    //setState(() {
-      /*print('my db');
-      print(await _display());
-      print(await _countReturn());*/
-    //});
-  }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            SizedBox(
-              width: 300, 
-              height: 700, 
-              child: GridView.count(
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      title: Text(widget.title),
+    ),
+    body: Center(
+      child: Column(
+        children: [
+          Text("\nFind all the matching pairs!\n\n",
+          style: Theme.of(context).textTheme.headlineLarge),
+          Expanded(
+            child: GridView.builder(
+              itemCount: sessionCards.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
-                padding: const EdgeInsets.all(10),
-                children: List.generate(cardsMax, (index) {
-                  return Center(
-                    child: Text(
-                      'Card ${sessionCards[index]}',
-                      style: TextTheme.of(context).headlineSmall,
-                    ),
-                  );
-                }),
+                crossAxisSpacing: 1,
+                mainAxisSpacing: 1,
+                childAspectRatio: 0.8,
               ),
+              itemBuilder: (context, index) {
+                return Center(
+                  child: Column(
+                    children: [                      
+                      Image.network(
+                        sessionCards[index].isCardUp == 1
+                            ? sessionCards[index].frontDesign
+                            : sessionCards[index].backDesign,
+                        width: 90,
+                        height: 93,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _generateCards,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+    ),
+  );
+}
 }
