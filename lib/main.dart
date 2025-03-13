@@ -6,7 +6,7 @@ DatabaseHelper myHelper = DatabaseHelper();
 /*
   Objective: card-matching game w animation+state management, player shld match cards from
     a grid of face-down cards -> flip to find pairs
-  UI: gridview or smth else 
+  XUI: gridview or smth else 
     X- grid of face-down cards (4x4 or 6x6)
     X- back design [common pattern]
   Xstate management: eg Provider to manage it
@@ -15,11 +15,11 @@ DatabaseHelper myHelper = DatabaseHelper();
       Xcurrent state [face up or down]
   animation:   animatedbuilder or animatedcontainer
     flip from down -> up and vice versa
-  game logic: track if currently up or down
-    when player taps 2 face-down cards, check if they match
-      MATCH -> keep face up
-      NOT MATCH -> flip face-down again
-  win condition: check if all pairs r matched -> display victory msg
+  Xgame logic: track if currently up or down
+    Xwhen player taps 2 face-down cards, check if they match
+      XMATCH -> keep face up
+      XNOT MATCH -> flip face-down again
+ X win condition: check if all pairs r matched -> display victory msg
 */
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,7 +81,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Card> sessionCards = [];
   List<int> takenNums = [];
   int cardsMax = 16;
-  int matchedCards = 0;
+  List<Card> matchedCards = [];
+  List<Card> tappedCards = [];
+  String message = "Find all the matching pairs!";
 
   @override
   void initState() {
@@ -126,6 +128,12 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {});
   }
 
+  void _flipCards() async {
+    setState(() {
+      
+    });
+  }
+
   Future<List<Map<String, dynamic>>> _display() async {
     return await myHelper.queryAllRows();
   }
@@ -143,7 +151,7 @@ Widget build(BuildContext context) {
     body: Center(
       child: Column(
         children: [
-          Text("\nFind all the matching pairs!\n\n",
+          Text("\n$message\n\n",
           style: Theme.of(context).textTheme.headlineLarge),
           Expanded(
               child: GridView.builder(
@@ -165,9 +173,42 @@ Widget build(BuildContext context) {
                         ),
                         GestureDetector(
                           onTap: () {
-                            setState(() {
-                              sessionCards[duplicateId].isCardUp = (sessionCards[duplicateId].isCardUp == 1) ? 0 : 1;
-                            });
+                            //if the card they just clicked on is already in matchedCards, return
+                            /*for (int i = 2; i <= matchedCards.length; i++) {
+                              if (matchedCards[i] == sessionCards[duplicateId]) {
+                                return;
+                              }
+                            }*/
+                            if (tappedCards.length >= 2) {
+                              return;
+                            } else {
+                              setState(() {
+                                if (matchedCards.contains(sessionCards[duplicateId]) || tappedCards.contains(sessionCards[duplicateId])) {
+                                  return;
+                                }
+                                sessionCards[duplicateId].isCardUp = (sessionCards[duplicateId].isCardUp == 1) ? 0 : 1;
+                                tappedCards.add(sessionCards[duplicateId]);
+                                if (tappedCards.length == 2) {
+                                  int firstIndex = tappedCards.length - 2;
+                                  int secondIndex = tappedCards.length - 1;
+                                  if (tappedCards[firstIndex].cardID == tappedCards[secondIndex].cardID) {
+                                    message = "Match found!";
+                                    matchedCards.add(tappedCards[0]);
+                                    matchedCards.add(tappedCards[1]);
+                                    tappedCards.clear();
+                                  } else {
+                                    tappedCards[tappedCards.length - 1].isCardUp = 0;
+                                    tappedCards[tappedCards.length - 2].isCardUp = 0;
+                                    tappedCards.clear();
+                                    //numMatched = 0;
+                                    message = "Try again.";                            
+                                  }
+                                  if (matchedCards.length == 16) {
+                                    message = "You won! Congrats!!";
+                                  }
+                                }
+                              });
+                            }
                           },
                         ),
                       ],
