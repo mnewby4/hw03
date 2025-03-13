@@ -11,6 +11,7 @@ class DatabaseHelper {
   static const columnCardUp = 'isCardUp';
   static const columnBackDesign = 'backDesign';
   static const columnFrontDesign = 'frontDesign';
+  static const columnDuplicate = 'duplicateId';
   late Database _db;
   
 // this opens the database (and creates it if it doesn't exist)
@@ -31,7 +32,8 @@ class DatabaseHelper {
   $columnId INTEGER PRIMARY KEY,
   $columnCardUp INTEGER DEFAULT 0, 
   $columnBackDesign TEXT NOT NULL,
-  $columnFrontDesign TEXT NOT NULL
+  $columnFrontDesign TEXT NOT NULL,
+  $columnDuplicate INTEGER DEFAULT 0
   )
 ''');
     List<String> frontDesigns = [
@@ -56,6 +58,7 @@ class DatabaseHelper {
         columnCardUp: 0, 
         columnBackDesign: 'https://i.pinimg.com/236x/90/04/5e/90045ee90ffda21b689af6a2847e6b0d.jpg',
         columnFrontDesign: frontDesigns[i],
+        columnDuplicate: 0,
       });
     }
   }
@@ -91,6 +94,7 @@ class DatabaseHelper {
         isCardUp: result.first[columnCardUp] as int,
         backDesign: result.first[columnBackDesign] as String,
         frontDesign: result.first[columnFrontDesign] as String,
+        duplicateId: result.first[columnDuplicate] as int,
       );
     } return null;    
   }

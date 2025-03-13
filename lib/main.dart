@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'helper.dart';
 import 'dart:math';
 DatabaseHelper myHelper = DatabaseHelper();
@@ -6,12 +7,12 @@ DatabaseHelper myHelper = DatabaseHelper();
   Objective: card-matching game w animation+state management, player shld match cards from
     a grid of face-down cards -> flip to find pairs
   UI: gridview or smth else 
-    - grid of face-down cards (4x4 or 6x6)
-    - back design [common pattern]
+    X- grid of face-down cards (4x4 or 6x6)
+    X- back design [common pattern]
   Xstate management: eg Provider to manage it
     Xdata model for cards with 
-      front+back design properties
-      current state [face up or down]
+      Xfront+back design properties
+      Xcurrent state [face up or down]
   animation:   animatedbuilder or animatedcontainer
     flip from down -> up and vice versa
   game logic: track if currently up or down
@@ -53,23 +54,25 @@ class MyHomePage extends StatefulWidget {
 
 class Card {
   final int cardID; 
-  final int isCardUp;
+  int isCardUp;
   final String backDesign;
   final String frontDesign;
+  int duplicateId;
 
   Card({
     required this.cardID, 
     required this.isCardUp, 
     required this.backDesign, 
-    required this.frontDesign
+    required this.frontDesign,
+    required this.duplicateId,
   });
 
-  Map<String, Object?> toMap() {
+  /*Map<String, Object?> toMap() {
     return {'_id': cardID, 'isCardUp': isCardUp, 'backDesign': backDesign, 'frontDesign': frontDesign};
-  }
+  }*/
   @override
   String toString() {
-    return 'Card{_id: $cardID, isCardUp: $isCardUp, backDesign: $backDesign, frontDesign: $frontDesign}';
+    return 'Card{_id: $cardID, isCardUp: $isCardUp, backDesign: $backDesign, frontDesign: $frontDesign, duplicateId: $duplicateId}';
   }
   
 }
@@ -78,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<Card> sessionCards = [];
   List<int> takenNums = [];
   int cardsMax = 16;
+  int matchedCards = 0;
 
   @override
   void initState() {
@@ -95,12 +99,27 @@ class _MyHomePageState extends State<MyHomePage> {
         int randomNum = random.nextInt(13) + 1;
         if (!takenNums.contains(randomNum)) {
           takenNums.add(randomNum);
-          //List<Map<String, dynamic>> fetchCard = await myHelper.queryOneRow(randomNum);
-          //Card currentCard = 
           Card? currentCard = await myHelper.queryOneRow(randomNum);
-          sessionCards.add(currentCard!);
-          sessionCards.add(currentCard!);
-          //print('CURRENT SESSION CARDS; $sessionCards');
+          if (currentCard != null) {
+            sessionCards.add(
+              Card(
+                cardID: currentCard.cardID, 
+                isCardUp: currentCard.isCardUp,
+                frontDesign: currentCard.frontDesign, 
+                backDesign: currentCard.backDesign,
+                duplicateId: sessionCards.length,
+              )
+            );
+            sessionCards.add(
+              Card(
+                cardID: currentCard.cardID, 
+                isCardUp: currentCard.isCardUp,
+                frontDesign: currentCard.frontDesign, 
+                backDesign: currentCard.backDesign,
+                duplicateId: sessionCards.length,
+              )
+            );
+          }
         }
       }
         sessionCards.shuffle();
@@ -127,31 +146,36 @@ Widget build(BuildContext context) {
           Text("\nFind all the matching pairs!\n\n",
           style: Theme.of(context).textTheme.headlineLarge),
           Expanded(
-            child: GridView.builder(
-              itemCount: sessionCards.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                crossAxisSpacing: 1,
-                mainAxisSpacing: 1,
-                childAspectRatio: 0.8,
+              child: GridView.builder(
+                shrinkWrap: true,
+                itemCount: sessionCards.length,
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                ),
+                itemBuilder: (context, duplicateId) {
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [    
+                        Image.network(
+                          sessionCards[duplicateId].isCardUp == 1
+                              ? sessionCards[duplicateId].frontDesign
+                              : sessionCards[duplicateId].backDesign,
+                          width: 80,
+                          height: 90,
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              sessionCards[duplicateId].isCardUp = (sessionCards[duplicateId].isCardUp == 1) ? 0 : 1;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-              itemBuilder: (context, index) {
-                return Center(
-                  child: Column(
-                    children: [                      
-                      Image.network(
-                        sessionCards[index].isCardUp == 1
-                            ? sessionCards[index].frontDesign
-                            : sessionCards[index].backDesign,
-                        width: 90,
-                        height: 93,
-                      ),
-                    ],
-                  ),
-                );
-              },
             ),
-          ),
         ],
       ),
     ),
